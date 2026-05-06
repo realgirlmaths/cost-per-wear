@@ -1,0 +1,252 @@
+
+<style>
+  .calc-wrap { padding: 1rem 0; font-family: var(--font-sans); }
+  .section-label { font-size: 13px; font-weight: 500; color: var(--color-text-secondary); text-transform: uppercase; letter-spacing: 0.04em; margin: 0 0 10px; }
+  .inputs-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 1.5rem; }
+  .input-card { background: var(--color-background-primary); border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-lg); padding: 14px 16px; }
+  .input-card h3 { font-size: 15px; font-weight: 500; margin: 0 0 12px; color: var(--color-text-primary); display: flex; align-items: center; gap: 8px; }
+  .field { margin-bottom: 10px; }
+  .field label { display: block; font-size: 12px; color: var(--color-text-secondary); margin-bottom: 4px; }
+  .field input[type=number] { width: 100%; box-sizing: border-box; }
+  .metrics-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 1.5rem; }
+  .metric { background: var(--color-background-secondary); border-radius: var(--border-radius-md); padding: 12px 14px; }
+  .metric .mlabel { font-size: 12px; color: var(--color-text-secondary); margin: 0 0 4px; }
+  .metric .mval { font-size: 20px; font-weight: 500; color: var(--color-text-primary); margin: 0; }
+  .metric .msub { font-size: 11px; color: var(--color-text-tertiary); margin: 2px 0 0; }
+  .chart-wrap { background: var(--color-background-primary); border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-lg); padding: 16px; margin-bottom: 1.5rem; }
+  .chart-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+  .chart-title { font-size: 14px; font-weight: 500; color: var(--color-text-primary); margin: 0; }
+  .legend { display: flex; gap: 16px; font-size: 12px; color: var(--color-text-secondary); }
+  .legend span { display: flex; align-items: center; gap: 5px; }
+  .legend-dot { width: 10px; height: 10px; border-radius: 2px; }
+  .sim-row { display: flex; align-items: center; gap: 12px; margin-bottom: 1rem; }
+  .sim-row label { font-size: 13px; color: var(--color-text-secondary); white-space: nowrap; }
+  .sim-row input[type=range] { flex: 1; }
+  .sim-val { font-size: 13px; font-weight: 500; min-width: 40px; color: var(--color-text-primary); }
+  .cpw-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .cpw-card { background: var(--color-background-primary); border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-lg); padding: 14px 16px; }
+  .cpw-card h4 { font-size: 13px; font-weight: 500; color: var(--color-text-secondary); margin: 0 0 8px; }
+  .cpw-row { display: flex; justify-content: space-between; align-items: baseline; font-size: 13px; color: var(--color-text-secondary); padding: 3px 0; border-bottom: 0.5px solid var(--color-border-tertiary); }
+  .cpw-row:last-child { border-bottom: none; }
+  .cpw-row .v { color: var(--color-text-primary); font-weight: 500; }
+</style>
+
+<div class="calc-wrap">
+  <h2 class="sr-only">Cost-per-use comparison calculator: expensive item vs budget item with investment portfolio</h2>
+
+  <div class="inputs-grid">
+    <div class="input-card">
+      <h3><span style="width:10px;height:10px;border-radius:2px;background:#3b82f6;display:inline-block;"></span>Scenario 1 — expensive item</h3>
+      <div class="field"><label>Purchase price ($)</label><input type="number" id="s1price" value="2000" min="0"></div>
+      <div class="field"><label>Resale value (% of retail)</label><input type="number" id="s1resale" value="40" min="0" max="100"></div>
+      <div class="field"><label>Retail price appreciation (%/yr)</label><input type="number" id="s1appr" value="2.5" step="0.1" min="0"></div>
+    </div>
+    <div class="input-card">
+      <h3><span style="width:10px;height:10px;border-radius:2px;background:#f59e0b;display:inline-block;"></span>Scenario 2 — budget item + invest</h3>
+      <div class="field"><label>Budget item price ($)</label><input type="number" id="s2price" value="200" min="0"></div>
+      <div class="field"><label>Market return (%/yr)</label><input type="number" id="s2return" value="7" step="0.1" min="0"></div>
+      <div class="field"><label>Item lifespan (years)</label><input type="number" id="s2life" value="2" min="0.5" step="0.5"></div>
+      <div class="field"><label>Inflation (%/yr)</label><input type="number" id="s2infl" value="2.5" step="0.1" min="0"></div>
+    </div>
+  </div>
+
+  <div class="sim-row">
+    <label>Simulation length</label>
+    <input type="range" id="simyears" min="1" max="30" value="10" step="1">
+    <span class="sim-val" id="simyears-out">10 years</span>
+  </div>
+  <div class="field" style="margin-bottom:1.5rem;">
+    <label style="font-size:12px;color:var(--color-text-secondary);">Use frequency (days between uses)</label>
+    <input type="number" id="usefreq" value="2" min="1" style="width:120px;">
+  </div>
+
+  <p class="section-label">Portfolio value over time</p>
+  <div class="chart-wrap">
+    <div class="chart-header">
+      <p class="chart-title" style="margin:0;">Net worth (item value + cash)</p>
+      <div class="legend">
+        <span><span class="legend-dot" style="background:#3b82f6;"></span>Expensive item</span>
+        <span><span class="legend-dot" style="background:#f59e0b;border:1.5px dashed #f59e0b;background:transparent;"></span>Budget item + portfolio</span>
+      </div>
+    </div>
+    <div style="position:relative;height:280px;"><canvas id="portChart" role="img" aria-label="Portfolio value over time comparing expensive item net worth vs budget item plus investment portfolio"></canvas></div>
+  </div>
+
+  <p class="section-label">Summary metrics at end of simulation</p>
+  <div class="metrics-grid">
+    <div class="metric"><p class="mlabel">S1 — total cost</p><p class="mval" id="m-s1cost">—</p><p class="msub">purchase − resale</p></div>
+    <div class="metric"><p class="mlabel">S2 — total items cost</p><p class="mval" id="m-s2cost">—</p><p class="msub">all replacements</p></div>
+    <div class="metric"><p class="mlabel">S1 — cost per use</p><p class="mval" id="m-s1cpw">—</p></div>
+    <div class="metric"><p class="mlabel">S2 — cost per use</p><p class="mval" id="m-s2cpw">—</p></div>
+  </div>
+
+  <p class="section-label">Cost-per-use breakdown</p>
+  <div class="cpw-grid">
+    <div class="cpw-card">
+      <h4>Scenario 1 — expensive item</h4>
+      <div id="s1-detail-rows"></div>
+    </div>
+    <div class="cpw-card">
+      <h4>Scenario 2 — budget item + portfolio</h4>
+      <div id="s2-detail-rows"></div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+let portChart = null;
+
+function fmt(v, dec) {
+  dec = dec === undefined ? 0 : dec;
+  return '$' + Math.abs(v).toLocaleString('en-US', {minimumFractionDigits: dec, maximumFractionDigits: dec});
+}
+
+function simulate() {
+  const s1price  = +document.getElementById('s1price').value  || 2000;
+  const s1resale = (+document.getElementById('s1resale').value || 40) / 100;
+  const s1appr   = (+document.getElementById('s1appr').value  || 2.5) / 100;
+  const s2price  = +document.getElementById('s2price').value  || 200;
+  const s2return = (+document.getElementById('s2return').value || 7)  / 100;
+  const s2life   = +document.getElementById('s2life').value   || 2;
+  const s2infl   = (+document.getElementById('s2infl').value  || 2.5) / 100;
+  const simyears = +document.getElementById('simyears').value || 10;
+  const usefreq  = +document.getElementById('usefreq').value  || 2;
+
+  const uses = Math.floor((simyears * 365) / usefreq);
+
+  const labels = [];
+  const s1vals = [];
+  const s2vals = [];
+
+  let s2portfolio     = s1price - s2price;
+  let s2totalItemCost = s2price;
+  let s2nextReplace   = s2life;
+
+  for (let y = 0; y <= simyears; y++) {
+    labels.push('Year ' + y);
+
+    const s1retail    = s1price * Math.pow(1 + s1appr, y);
+    const s1resaleVal = s1retail * s1resale;
+    s1vals.push(+s1resaleVal.toFixed(2));
+    s2vals.push(+s2portfolio.toFixed(2));
+
+    if (y < simyears) {
+      s2portfolio = s2portfolio * (1 + s2return);
+      if (y + 1 >= s2nextReplace && s2nextReplace <= simyears) {
+        const replacementPrice = s2price * Math.pow(1 + s2infl, s2nextReplace);
+        s2portfolio     -= replacementPrice;
+        s2totalItemCost += replacementPrice;
+        s2nextReplace   += s2life;
+      }
+    }
+  }
+
+  const s1finalRetail  = s1price * Math.pow(1 + s1appr, simyears);
+  const s1finalResale  = s1finalRetail * s1resale;
+  const s1totalCost    = s1price - s1finalResale;
+  const s1cpu          = s1totalCost / uses;
+  const s2cpu          = s2totalItemCost / uses;
+  const numReplacements = Math.floor((simyears - 0.001) / s2life);
+
+  document.getElementById('m-s1cost').textContent = fmt(s1totalCost);
+  document.getElementById('m-s2cost').textContent = fmt(s2totalItemCost);
+  document.getElementById('m-s1cpw').textContent  = fmt(s1cpu, 2);
+  document.getElementById('m-s2cpw').textContent  = fmt(s2cpu, 2);
+
+  const makeRows = (pairs) => pairs.map(([l,v]) =>
+    `<div class="cpw-row"><span>${l}</span><span class="v">${v}</span></div>`
+  ).join('');
+
+  document.getElementById('s1-detail-rows').innerHTML = makeRows([
+    ['Purchase price',          fmt(s1price)],
+    ['Final retail value',      fmt(s1finalRetail)],
+    ['Resale value',            fmt(s1finalResale)],
+    ['Net cost (purchase − resale)', fmt(s1totalCost)],
+    ['Total uses',              uses.toLocaleString()],
+    ['Cost per use',            fmt(s1cpu, 2)],
+  ]);
+
+  document.getElementById('s2-detail-rows').innerHTML = makeRows([
+    ['Initial item cost',       fmt(s2price)],
+    ['Amount invested',         fmt(s1price - s2price)],
+    ['Replacements purchased',  numReplacements],
+    ['Total items spend',       fmt(s2totalItemCost)],
+    ['Portfolio at end',        fmt(s2portfolio)],
+    ['Total uses',              uses.toLocaleString()],
+    ['Cost per use (items only)', fmt(s2cpu, 2)],
+  ]);
+
+  if (portChart) {
+    portChart.data.labels = labels;
+    portChart.data.datasets[0].data = s1vals;
+    portChart.data.datasets[1].data = s2vals;
+    portChart.update();
+  } else {
+    portChart = new Chart(document.getElementById('portChart'), {
+      type: 'line',
+      data: {
+        labels,
+        datasets: [
+          {
+            label: 'Expensive item net worth',
+            data: s1vals,
+            borderColor: '#3b82f6',
+            backgroundColor: 'rgba(59,130,246,0.08)',
+            fill: true,
+            tension: 0.3,
+            borderWidth: 2,
+            pointRadius: 3,
+            borderDash: [],
+          },
+          {
+            label: 'Budget item + portfolio',
+            data: s2vals,
+            borderColor: '#f59e0b',
+            backgroundColor: 'rgba(245,158,11,0.08)',
+            fill: true,
+            tension: 0.3,
+            borderWidth: 2,
+            pointRadius: 3,
+            borderDash: [5, 3],
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              label: ctx => ' ' + ctx.dataset.label + ': $' + ctx.parsed.y.toLocaleString('en-US', {minimumFractionDigits: 0, maximumFractionDigits: 0})
+            }
+          }
+        },
+        scales: {
+          x: {
+            ticks: { font: { size: 11 }, color: '#888', autoSkip: true, maxTicksLimit: 11 },
+            grid: { display: false }
+          },
+          y: {
+            ticks: {
+              font: { size: 11 },
+              color: '#888',
+              callback: v => '$' + (v >= 1000 ? (v / 1000).toFixed(0) + 'k' : v)
+            },
+            grid: { color: 'rgba(128,128,128,0.12)' }
+          }
+        }
+      }
+    });
+  }
+}
+
+document.querySelectorAll('input').forEach(el => el.addEventListener('input', () => {
+  const sy = document.getElementById('simyears');
+  document.getElementById('simyears-out').textContent = sy.value + ' year' + (sy.value == 1 ? '' : 's');
+  simulate();
+}));
+
+simulate();
+</script>
